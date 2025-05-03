@@ -1,5 +1,5 @@
 [build]
-  command = "npm install"
+  command = "npm install && npm run build"
   publish = "public"
   functions = "netlify/functions"
 
@@ -7,3 +7,9 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+[dev]
+  framework = "#static"
+  targetPort = 3000
+  publish = "public"
+  functions = "netlify/functions"
