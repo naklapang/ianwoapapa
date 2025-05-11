@@ -9,6 +9,8 @@
   --success: #4CAF50;
   --error: #ff6b6b;
   --shadow: 0 4px 10px rgba(0,0,0,.15);
+  --gold: #FFD700;
+  --pink: #FF4081;
 }
 
 body, .content {
@@ -154,51 +156,12 @@ h2 {
 }
 
 .otp-message-box {
-  background: var(--white-20);
-  padding: 16px;
-  border-radius: 12px;
+  background: var(--white-30);
+  padding: 12px;
+  border-radius: 8px;
   font-size: 14px;
   color: var(--white);
   margin-bottom: 24px;
-  line-height: 1.5;
-  text-align: center;
-}
-.otp-message-box small {
-  font-size: 12px;
-  opacity: 0.7;
-  display: block;
-  margin-top: 4px;
-}
-#otp-timer {
-  display: block;
-  margin-top: 8px;
-  font-weight: 600;
-  color: var(--white);
-  font-size: 15px;
-}
-
-.otp-options {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 20px;
-  font-size: 14px;
-}
-.otp-resend, .otp-change {
-  color: var(--white);
-  text-decoration: none;
-  transition: opacity 0.2s ease;
-}
-.otp-resend:not(.active) {
-  opacity: 0.5;
-  pointer-events: none;
-}
-.otp-resend:hover, .otp-change:hover {
-  opacity: 0.8;
-}
-.separator {
-  color: var(--white-50);
 }
 
 .floating-notification, #success-notification, #reward-notification {
@@ -244,6 +207,8 @@ h2 {
   max-width: 80%;
   display: none;
   z-index: 1000;
+  animation: bounceIn 0.5s ease-out;
+  overflow: hidden;
 }
 #reward-notification h3 {
   color: var(--success);
@@ -379,6 +344,37 @@ h2 {
   animation: spin 1s infinite linear;
 }
 
+/* Confetti Animation */
+.confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: confettiFall 3s ease-in-out infinite;
+  opacity: 0;
+  z-index: 1002;
+}
+
+/* Reward Notification Content */
+.notification-content {
+  position: relative;
+  z-index: 1001;
+}
+
+.notification-content .mission-box {
+  background: rgba(255,255,255,0.2);
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.notification-content .highlight {
+  color: var(--gold);
+  font-weight: 700;
+  text-shadow: 0 0 3px rgba(0,0,0,0.3);
+}
+
+/* Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -399,6 +395,31 @@ h2 {
   }
 }
 
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(200px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 #pin-page~#lanjutkan-container, #otp-page~#lanjutkan-container {
   display: none!important;
-}
+  }
